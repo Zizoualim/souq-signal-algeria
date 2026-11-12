@@ -40,7 +40,7 @@ function Index() {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
   const { data: products = [] } = useQuery(productsQuery);
-  const { data: reports = [], isError } = useQuery(reportsQuery);
+  const { data: reports = [], isError, isSuccess } = useQuery(reportsQuery);
 
   const iconByName = useMemo(() => new Map(products.map((p) => [p.name, p.icon])), [products]);
   const iconFor = useCallback((name: string) => iconByName.get(name) ?? "🛒", [iconByName]);
@@ -113,6 +113,15 @@ function Index() {
         </div>
       </header>
 
+      {isSuccess && visible.length === 0 && (
+        <EmptyState
+          productName={filter}
+          icon={filter ? iconFor(filter) : "🗺️"}
+          onAdd={() => setAddOpen(true)}
+          onShowAll={filter && reports.length > 0 ? () => setFilter(null) : undefined}
+        />
+      )}
+
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-3 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <div className="pointer-events-auto flex flex-col gap-1 rounded-2xl glass px-3 py-2 text-xs font-semibold shadow-float">
           {REPORT_STATUSES.map((s) => (
@@ -159,5 +168,48 @@ function Index() {
         }}
       />
     </main>
+  );
+}
+
+function EmptyState({
+  productName,
+  icon,
+  onAdd,
+  onShowAll,
+}: {
+  productName: string | null;
+  icon: string;
+  onAdd: () => void;
+  onShowAll?: () => void;
+}) {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6">
+      <div
+        role="status"
+        className="pointer-events-auto w-full max-w-sm rounded-3xl glass p-6 text-center shadow-float animate-in fade-in zoom-in-95"
+      >
+        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary-soft text-4xl">
+          {icon}
+        </div>
+        <h2 className="mt-4 text-lg font-extrabold text-foreground">
+          {productName ? `ما كاين حتى بلاغ على «${productName}» بعد` : "ما كاين حتى بلاغ بعد"}
+        </h2>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          كن أول واحد يقول للناس وين راهي السلعة وبقداش. بلاغك يعاون جيرانك!
+        </p>
+        <button
+          onClick={onAdd}
+          className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-primary text-base font-bold text-primary-foreground shadow-fab transition-transform active:scale-[0.98]"
+        >
+          <Plus className="size-5" strokeWidth={2.75} />
+          أضف أول بلاغ
+        </button>
+        {onShowAll && (
+          <button onClick={onShowAll} className="mt-3 text-sm font-bold text-primary">
+            عرض كل السلع
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
