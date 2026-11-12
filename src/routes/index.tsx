@@ -180,7 +180,7 @@ function EmptyState({
   productName: string | null;
   icon: string;
   onAdd: () => void;
-  onShowAll?: () => void;
+  onShowAll?: (() => void) | undefined;
 }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6">
