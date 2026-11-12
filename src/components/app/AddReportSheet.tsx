@@ -121,9 +121,7 @@ export function AddReportSheet({
           }}
         >
           <DrawerTitle className="text-xl font-bold">بلاغ جديد</DrawerTitle>
-          <DrawerDescription className="mt-1">
-            ساعد جيرانك: واش كاين وبقداش؟
-          </DrawerDescription>
+          <DrawerDescription className="mt-1">ساعد جيرانك: واش كاين وبقداش؟</DrawerDescription>
 
           <fieldset className="mt-5">
             <legend className="mb-2 text-sm font-bold">السلعة</legend>

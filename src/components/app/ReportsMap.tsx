@@ -77,7 +77,11 @@ export const ReportsMap = forwardRef<ReportsMapHandle, Props>(function ReportsMa
     if (!L || !map || !pos) return;
     if (!userMarkerRef.current) {
       userMarkerRef.current = L.marker(pos, {
-        icon: L.divIcon({ className: "", html: '<div class="wr-user-dot"></div>', iconSize: [18, 18] }),
+        icon: L.divIcon({
+          className: "",
+          html: '<div class="wr-user-dot"></div>',
+          iconSize: [18, 18],
+        }),
         interactive: false,
         zIndexOffset: -100,
       }).addTo(map);
@@ -124,17 +128,14 @@ export const ReportsMap = forwardRef<ReportsMapHandle, Props>(function ReportsMa
       userMarkerRef.current = null;
       readyRef.current = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (readyRef.current) renderMarkers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reports, selectedId, iconFor]);
 
   useEffect(() => {
     if (readyRef.current) renderUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPosition]);
 
   return <div ref={containerRef} className="absolute inset-0" aria-label="خريطة البلاغات" />;

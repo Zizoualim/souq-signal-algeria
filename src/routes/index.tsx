@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LocateFixed, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -8,7 +8,15 @@ import { AddReportSheet } from "@/components/app/AddReportSheet";
 import { FilterBar } from "@/components/app/FilterBar";
 import { ReportSheet } from "@/components/app/ReportSheet";
 import { ReportsMap, type ReportsMapHandle } from "@/components/app/ReportsMap";
-import { REPORT_STATUSES, STATUS_META, asStatus, productsQuery, reportsQuery } from "@/lib/reports";
+import {
+  REPORT_STATUSES,
+  STATUS_META,
+  asStatus,
+  productsQuery,
+  reportsQuery,
+  type Report,
+} from "@/lib/reports";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -34,6 +42,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const mapRef = useRef<ReportsMapHandle>(null);
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -78,6 +87,52 @@ function Index() {
   useEffect(() => {
     if (isError) toast.error("ما قدرناش نجيبو البلاغات، تحقق من الإنترنت");
   }, [isError]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("live-reports")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "reports" },
+        (payload) => {
+          const report = payload.new as Report;
+          queryClient.setQueryData<Report[]>(["reports"], (old) =>
+            old?.some((r) => r.id === report.id) ? old : [report, ...(old ?? [])],
+          );
+          toast.success(`بلاغ جديد: ${report.product_name} عند ${report.shop_name}`);
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "reports" },
+        (payload) => {
+          const report = payload.new as Report;
+          queryClient.setQueryData<Report[]>(
+            ["reports"],
+            (old) => old?.map((r) => (r.id === report.id ? report : r)) ?? [report],
+          );
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "reports" },
+        (payload) => {
+          const { id } = payload.old as { id: string };
+          queryClient.setQueryData<Report[]>(["reports"], (old) =>
+            (old ?? []).filter((r) => r.id !== id),
+          );
+        },
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          queryClient.invalidateQueries({ queryKey: ["reports"] });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-muted">

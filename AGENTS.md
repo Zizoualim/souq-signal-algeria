@@ -1,4 +1,5 @@
 <!-- LOVABLE:BEGIN -->
+
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
@@ -27,9 +28,11 @@ use the editor.
   `LOVABLE_API_KEY`. When Lovable does not provide one, users can bring their
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
+
 <!-- LOVABLE:END -->
 
 ## Project rules
+
 - Reports table ships empty (no seed rows); the map shows an empty-state card when nothing matches.
 - Reports are anonymous (no sign-in): the browser reads/inserts `reports` directly under RLS, and votes go only through the `vote_report` SECURITY DEFINER function — why: anon users must never get UPDATE rights on reports.
 - Leaflet is imported dynamically inside `ReportsMap`'s effect and the map wrapper uses `isolate` — why: Leaflet touches `window` at import (breaks SSR) and its pane z-indexes would otherwise cover the bottom sheets.

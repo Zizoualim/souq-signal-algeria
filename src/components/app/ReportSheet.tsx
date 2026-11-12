@@ -1,18 +1,27 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Clock, MapPin, Store } from "lucide-react";
+import { Clock, Copy, MapPin, Navigation, Share2, Store } from "lucide-react";
 import { toast } from "sonner";
 
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 import { supabase } from "@/integrations/supabase/client";
-import { STATUS_META, asStatus, formatPrice, timeAgo, type Report } from "@/lib/reports";
+import {
+  STATUS_META,
+  asStatus,
+  formatPrice,
+  shareMessage,
+  googleMapsUrl,
+  APP_URL,
+  timeAgo,
+  type Report,
+} from "@/lib/reports";
 import { cn } from "@/lib/utils";
 
 const VOTES_KEY = "wr-votes";
 
 function readVotes(): Record<string, "up" | "down"> {
   try {
-    return JSON.parse(localStorage.getItem(VOTES_KEY) ?? "{}");
+    return JSON.parse(localStorage.getItem(VOTES_KEY) ?? "{}") as Record<string, "up" | "down">;
   } catch {
     return {};
   }
@@ -53,6 +62,46 @@ export function ReportSheet({ report, icon, onClose }: Props) {
 
   const status = report ? asStatus(report.status) : "available";
   const meta = STATUS_META[status];
+
+  const openInMaps = () => {
+    if (!report) return;
+    window.open(googleMapsUrl(report.latitude, report.longitude), "_blank", "noopener,noreferrer");
+  };
+
+  const copyLink = async () => {
+    if (!report) return;
+    const text = shareMessage(report, report.price);
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("تم نسخ رسالة البلاغ، الصقها في أي مكان");
+    } catch {
+      toast.error("ما قدرناش ننسخو الرسالة، عاود جرب");
+    }
+  };
+
+  const shareTo = (target: "whatsapp" | "facebook") => {
+    if (!report) return;
+    const text = shareMessage(report, report.price);
+    const url =
+      target === "whatsapp"
+        ? `https://wa.me/?text=${encodeURIComponent(text)}`
+        : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(APP_URL)}&quote=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const nativeShare = async () => {
+    if (!report) return;
+    const text = shareMessage(report, report.price);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `وين راهي؟ — ${report.product_name}`, text });
+      } catch {
+        /* user cancelled */
+      }
+    } else {
+      await copyLink();
+    }
+  };
 
   return (
     <Drawer open={!!report} onOpenChange={(o) => !o && onClose()} shouldScaleBackground={false}>
@@ -134,6 +183,41 @@ export function ReportSheet({ report, icon, onClose }: Props) {
                 سجلنا رأيك على هذا البلاغ، شكراً لمساعدتك 🌿
               </p>
             )}
+
+            <button
+              onClick={openInMaps}
+              className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-primary text-base font-bold text-primary-foreground shadow-fab transition-all active:scale-[0.98]"
+            >
+              <Navigation className="size-5" aria-hidden />
+              خذني إليه 🧭
+            </button>
+
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <button
+                onClick={nativeShare}
+                className="flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-border bg-card text-sm font-bold transition-all active:scale-95"
+              >
+                <Share2 className="size-4" aria-hidden /> مشاركة 📲
+              </button>
+              <button
+                onClick={() => shareTo("whatsapp")}
+                className="flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-border bg-card text-sm font-bold transition-all active:scale-95"
+              >
+                واتساب
+              </button>
+              <button
+                onClick={() => shareTo("facebook")}
+                className="flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-border bg-card text-sm font-bold transition-all active:scale-95"
+              >
+                فيسبوك
+              </button>
+            </div>
+            <button
+              onClick={copyLink}
+              className="mt-2 flex h-10 w-full items-center justify-center gap-1.5 text-xs font-bold text-primary transition-all active:scale-95"
+            >
+              <Copy className="size-3.5" aria-hidden /> نسخ نص المشاركة
+            </button>
           </div>
         )}
       </DrawerContent>
