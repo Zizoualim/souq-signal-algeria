@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Reports are anonymous (no sign-in): the browser reads/inserts `reports` directly under RLS, and votes go only through the `vote_report` SECURITY DEFINER function — why: anon users must never get UPDATE rights on reports.
+- Leaflet is imported dynamically inside `ReportsMap`'s effect and the map wrapper uses `isolate` — why: Leaflet touches `window` at import (breaks SSR) and its pane z-indexes would otherwise cover the bottom sheets.
+- Installable via manifest only (no service worker) — why: offline mode was not requested and service workers break previews.
