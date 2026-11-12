@@ -14,13 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      products: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          downvotes: number
+          id: string
+          latitude: number
+          longitude: number
+          price: number | null
+          product_id: string | null
+          product_name: string
+          shop_name: string
+          status: string
+          upvotes: number
+        }
+        Insert: {
+          created_at?: string
+          downvotes?: number
+          id?: string
+          latitude: number
+          longitude: number
+          price?: number | null
+          product_id?: string | null
+          product_name: string
+          shop_name: string
+          status: string
+          upvotes?: number
+        }
+        Update: {
+          created_at?: string
+          downvotes?: number
+          id?: string
+          latitude?: number
+          longitude?: number
+          price?: number | null
+          product_id?: string | null
+          product_name?: string
+          shop_name?: string
+          status?: string
+          upvotes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      vote_report: {
+        Args: { _kind: string; _report_id: string }
+        Returns: {
+          created_at: string
+          downvotes: number
+          id: string
+          latitude: number
+          longitude: number
+          price: number | null
+          product_id: string | null
+          product_name: string
+          shop_name: string
+          status: string
+          upvotes: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reports"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
