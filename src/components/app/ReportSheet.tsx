@@ -70,7 +70,7 @@ export function ReportSheet({ report, icon, onClose }: Props) {
 
   const copyLink = async () => {
     if (!report) return;
-    const text = shareMessage(report, report.price);
+    const text = shareMessage(report);
     try {
       await navigator.clipboard.writeText(text);
       toast.success("تم نسخ رسالة البلاغ، الصقها في أي مكان");
@@ -79,19 +79,34 @@ export function ReportSheet({ report, icon, onClose }: Props) {
     }
   };
 
-  const shareTo = (target: "whatsapp" | "facebook") => {
+  const shareTo = async (target: "whatsapp" | "facebook") => {
     if (!report) return;
-    const text = shareMessage(report, report.price);
-    const url =
-      target === "whatsapp"
-        ? `https://wa.me/?text=${encodeURIComponent(text)}`
-        : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(APP_URL)}&quote=${encodeURIComponent(text)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    const text = shareMessage(report);
+    if (target === "whatsapp") {
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(text)}`,
+        "_blank",
+        "noopener,noreferrer",
+      );
+      return;
+    }
+    // Facebook ignores pre-filled text, so copy it first for the user to paste.
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("نسخنا نص البلاغ، الصقه في منشورك على فيسبوك");
+    } catch {
+      /* clipboard unavailable: the link is still shared */
+    }
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(APP_URL)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
 
   const nativeShare = async () => {
     if (!report) return;
-    const text = shareMessage(report, report.price);
+    const text = shareMessage(report);
     if (navigator.share) {
       try {
         await navigator.share({ title: `وين راهي؟ — ${report.product_name}`, text });
@@ -200,13 +215,13 @@ export function ReportSheet({ report, icon, onClose }: Props) {
                 <Share2 className="size-4" aria-hidden /> مشاركة 📲
               </button>
               <button
-                onClick={() => shareTo("whatsapp")}
+                onClick={() => void shareTo("whatsapp")}
                 className="flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-border bg-card text-sm font-bold transition-all active:scale-95"
               >
                 واتساب
               </button>
               <button
-                onClick={() => shareTo("facebook")}
+                onClick={() => void shareTo("facebook")}
                 className="flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-border bg-card text-sm font-bold transition-all active:scale-95"
               >
                 فيسبوك

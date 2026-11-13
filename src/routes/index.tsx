@@ -90,7 +90,7 @@ function Index() {
 
   useEffect(() => {
     const channel = supabase
-      .channel("live-reports")
+      .channel(`live-reports-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "reports" },

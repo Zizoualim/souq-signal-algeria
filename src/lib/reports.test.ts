@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { newReportSchema } from "./reports";
+import { APP_URL, googleMapsUrl, newReportSchema, shareMessage } from "./reports";
 
 const base = {
   product_id: "8b0e7c2e-6a3f-4c5f-9d0e-2b1a3c4d5e6f",
@@ -26,5 +26,23 @@ describe("new report rules", () => {
 
   it("requires a shop or neighbourhood name", () => {
     expect(newReportSchema.safeParse({ ...base, shop_name: " " }).success).toBe(false);
+  });
+});
+
+describe("share and directions", () => {
+  it("builds the share text with shop, price in دج and the app link", () => {
+    expect(shareMessage({ shop_name: "سوق باب الواد", price: 85 })).toBe(
+      "السلعة متوفرة الآن عند سوق باب الواد بسعر 85 دج - شاهد الموقع على تطبيق وين راهي https://souq-signal-algeria.lovable.app",
+    );
+  });
+
+  it("shares the published app address", () => {
+    expect(APP_URL).toBe("https://souq-signal-algeria.lovable.app");
+  });
+
+  it("opens Google Maps directions to the shop coordinates", () => {
+    expect(googleMapsUrl(36.75, 3.05)).toBe(
+      "https://www.google.com/maps/dir/?api=1&destination=36.75,3.05",
+    );
   });
 });

@@ -108,10 +108,15 @@ export function timeAgo(iso: string, now: number = Date.now()) {
 /** Reports older than this are shown faded on the map. */
 export const STALE_AFTER_MS = 1000 * 60 * 60 * 12;
 
-export const APP_URL = "https://win-rahi.dz";
+/** Public address of the published app, used in shared messages. */
+export const APP_URL = "https://souq-signal-algeria.lovable.app";
 
-export function shareMessage(report: Report, price: number | null) {
-  const priceText = price == null ? "" : ` بسعر ${formatPrice(price)}`;
+/** Ready-made share text: "السلعة متوفرة الآن عند [المحل] بسعر [السعر] دج - …" + app link. */
+export function shareMessage(report: Pick<Report, "shop_name" | "price">) {
+  const priceText =
+    report.price == null
+      ? ""
+      : ` بسعر ${new Intl.NumberFormat("fr-DZ", { maximumFractionDigits: 2 }).format(report.price)} دج`;
   return `السلعة متوفرة الآن عند ${report.shop_name}${priceText} - شاهد الموقع على تطبيق وين راهي ${APP_URL}`;
 }
 
