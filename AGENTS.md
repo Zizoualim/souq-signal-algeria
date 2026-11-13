@@ -37,3 +37,4 @@ use the editor.
 - Reports are anonymous (no sign-in): the browser reads/inserts `reports` directly under RLS, and votes go only through the `vote_report` SECURITY DEFINER function — why: anon users must never get UPDATE rights on reports.
 - Leaflet is imported dynamically inside `ReportsMap`'s effect and the map wrapper uses `isolate` — why: Leaflet touches `window` at import (breaks SSR) and its pane z-indexes would otherwise cover the bottom sheets.
 - Installable via manifest only (no service worker) — why: offline mode was not requested and service workers break previews.
+- Keep `.env` committed (never add it to `.gitignore`); it holds only public backend URL/publishable key — why: published builds read the `VITE_SUPABASE_*` values from it, and without them the live app opens to a blank screen.
