@@ -68,6 +68,8 @@ export const reportsQuery = queryOptions({
     return data;
   },
   refetchInterval: 30_000,
+  // Fail fast on a bad connection so the retry card shows instead of a long spinner.
+  retry: 1,
 });
 
 export const newReportSchema = z.object({

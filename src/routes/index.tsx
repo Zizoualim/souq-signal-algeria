@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LocateFixed, Plus } from "lucide-react";
+import { Loader2, LocateFixed, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddReportSheet } from "@/components/app/AddReportSheet";
@@ -48,8 +48,18 @@ function Index() {
   const [addOpen, setAddOpen] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
-  const { data: products = [] } = useQuery(productsQuery);
-  const { data: reports = [], isError, isSuccess } = useQuery(reportsQuery);
+  const [mapReady, setMapReady] = useState(false);
+
+  const { data: products = [], isPending: productsPending } = useQuery(productsQuery);
+  const {
+    data: reports = [],
+    isError,
+    isSuccess,
+    isPending: reportsPending,
+    isRefetching,
+    refetch,
+  } = useQuery(reportsQuery);
+  const loading = !mapReady || reportsPending;
 
   const iconByName = useMemo(() => new Map(products.map((p) => [p.name, p.icon])), [products]);
   const iconFor = useCallback((name: string) => iconByName.get(name) ?? "🛒", [iconByName]);
@@ -144,6 +154,7 @@ function Index() {
           selectedId={selectedId}
           userPosition={userPos}
           onSelect={setSelectedId}
+          onReady={() => setMapReady(true)}
         />
       </div>
 
@@ -160,15 +171,57 @@ function Index() {
           </div>
           <div className="flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-accent-foreground">
             <span className="size-2 animate-pulse rounded-full bg-primary" />
-            {visible.length} بلاغ
+            {reportsPending ? "…" : visible.length} بلاغ
           </div>
         </div>
         <div className="pointer-events-auto">
-          <FilterBar products={products} value={filter} onChange={setFilter} />
+          <FilterBar
+            products={products}
+            value={filter}
+            onChange={setFilter}
+            loading={productsPending}
+          />
         </div>
       </header>
 
-      {isSuccess && visible.length === 0 && (
+      {loading && !isError && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+          <div
+            role="status"
+            className="flex items-center gap-2 rounded-full glass px-4 py-2.5 text-sm font-bold text-foreground shadow-float"
+          >
+            <Loader2 className="size-4 animate-spin text-primary" aria-hidden />
+            {mapReady ? "جاري جلب البلاغات…" : "جاري تحميل الخريطة…"}
+          </div>
+        </div>
+      )}
+
+      {isError && reports.length === 0 && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6">
+          <div
+            role="alert"
+            className="pointer-events-auto w-full max-w-sm rounded-3xl glass p-6 text-center shadow-float"
+          >
+            <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-status-empty-soft text-4xl">
+              📡
+            </div>
+            <h2 className="mt-4 text-lg font-extrabold text-foreground">
+              ما قدرناش نجيبو البلاغات
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">تحقق من الإنترنت وعاود المحاولة.</p>
+            <button
+              onClick={() => void refetch()}
+              disabled={isRefetching}
+              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-primary text-base font-bold text-primary-foreground shadow-fab transition-transform active:scale-[0.98] disabled:opacity-70"
+            >
+              <RefreshCw className={cn("size-5", isRefetching && "animate-spin")} aria-hidden />
+              عاود المحاولة
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isSuccess && mapReady && visible.length === 0 && (
         <EmptyState
           productName={filter}
           icon={filter ? iconFor(filter) : "🗺️"}
