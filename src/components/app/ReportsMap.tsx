@@ -14,6 +14,8 @@ type Props = {
   selectedId: string | null;
   userPosition: [number, number] | null;
   onSelect: (id: string | null) => void;
+  /** Called once the map library has loaded and the map is drawn. */
+  onReady?: () => void;
 };
 
 function escapeHtml(s: string) {
@@ -21,7 +23,7 @@ function escapeHtml(s: string) {
 }
 
 export const ReportsMap = forwardRef<ReportsMapHandle, Props>(function ReportsMap(
-  { reports, iconFor, selectedId, userPosition, onSelect },
+  { reports, iconFor, selectedId, userPosition, onSelect, onReady },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,6 +33,8 @@ export const ReportsMap = forwardRef<ReportsMapHandle, Props>(function ReportsMa
   const userMarkerRef = useRef<Leaflet.Marker | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
   const readyRef = useRef(false);
   const latestRef = useRef({ reports, iconFor, selectedId, userPosition });
   latestRef.current = { reports, iconFor, selectedId, userPosition };
@@ -119,7 +123,10 @@ export const ReportsMap = forwardRef<ReportsMapHandle, Props>(function ReportsMa
       if (latestRef.current.userPosition) centeredOnUser.current = true;
       renderMarkers();
       renderUser();
-    })();
+      onReadyRef.current?.();
+    })().catch((error: unknown) => {
+      console.error("Map failed to load", error);
+    });
     return () => {
       cancelled = true;
       map?.remove();

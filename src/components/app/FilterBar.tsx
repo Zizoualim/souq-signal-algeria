@@ -5,9 +5,10 @@ type Props = {
   products: Product[];
   value: string | null;
   onChange: (productName: string | null) => void;
+  loading?: boolean;
 };
 
-export function FilterBar({ products, value, onChange }: Props) {
+export function FilterBar({ products, value, onChange, loading = false }: Props) {
   const items: { key: string | null; label: string; icon: string }[] = [
     { key: null, label: "الكل", icon: "🗺️" },
     ...products.map((p) => ({ key: p.name, label: p.name, icon: p.icon })),
@@ -38,6 +39,15 @@ export function FilterBar({ products, value, onChange }: Props) {
           </button>
         );
       })}
+      {loading &&
+        products.length === 0 &&
+        [0, 1, 2, 3].map((i) => (
+          <span
+            key={`skeleton-${i}`}
+            aria-hidden
+            className="h-9 w-24 shrink-0 animate-pulse rounded-full glass shadow-float"
+          />
+        ))}
     </div>
   );
 }
